@@ -1,0 +1,45 @@
+/* Google Fonts: Playfair Display for serif headings, Inter for body copy. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif text-forest;
+  }
+
+  /* Custom selection color in keeping with the warm palette. */
+  ::selection {
+    background-color: #c2593a;
+    color: #faf6ef;
+  }
+}
+
+@layer utilities {
+  /* Utility used by the IntersectionObserver in App.tsx to trigger fade-in-up animations on scroll. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+    will-change: opacity, transform;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
