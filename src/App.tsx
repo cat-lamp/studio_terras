@@ -1,4 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import {
   ArrowRight,
   Search,
@@ -9,6 +14,7 @@ import {
   LineChart,
   Code2,
   Leaf,
+  Loader2,
 } from "lucide-react";
 
 /**
@@ -324,15 +330,57 @@ function WhatWeDo() {
 
 /* ---------------------------------------------------------------------------
  * Contact — minimalist form
+ *
+ * Submissions are POSTed to a Google Apps Script Web App that appends a row
+ * to a Google Sheet. The payload keys (`Name`, `Email`, `ProjectDetails`)
+ * match the sheet's column headers exactly.
+ *
+ * Google Apps Script endpoints don't return CORS headers, so the request is
+ * sent with `mode: 'no-cors'`. That means the response is opaque (we can't
+ * read status or body), so we treat a non-throwing fetch as success — which
+ * is the standard pattern for this setup.
  * -------------------------------------------------------------------------*/
-function Contact() {
-  const [submitted, setSubmitted] = useState(false);
+const CONTACT_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycbzp1EThlzyDyR-o5nRksCDOJeHjd-YFjrD9heiS2brdXdAvSjKBkuFSrNb_6dEAjGqK/exec";
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+type SubmitStatus = "idle" | "sending" | "success" | "error";
+
+const EMPTY_FORM = { Name: "", Email: "", ProjectDetails: "" };
+
+function Contact() {
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [status, setStatus] = useState<SubmitStatus>("idle");
+
+  const handleChange =
+    (field: keyof typeof EMPTY_FORM) =>
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setForm((prev) => ({ ...prev, [field]: event.target.value }));
+    };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // In production this would POST to an API / form handler.
-    setSubmitted(true);
+    if (status === "sending") return;
+
+    setStatus("sending");
+    try {
+      await fetch(CONTACT_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        // Apps Script's doPost receives text/plain as e.postData.contents.
+        // Using text/plain also sidesteps a preflight OPTIONS request.
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(form),
+      });
+      setStatus("success");
+      setForm(EMPTY_FORM);
+    } catch (err) {
+      console.error("Contact form submission failed", err);
+      setStatus("error");
+    }
   };
+
+  const isSending = status === "sending";
+  const isSuccess = status === "success";
 
   return (
     <section
@@ -363,54 +411,82 @@ function Contact() {
           style={{ transitionDelay: "120ms" }}
           noValidate
         >
-          {submitted ? (
+          {isSuccess ? (
             <div className="flex flex-col items-center text-center py-12">
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-forest-500 text-cream">
                 <Mail className="h-6 w-6" strokeWidth={1.5} />
               </div>
               <h3 className="mt-6 font-serif text-2xl text-forest-700">
-                Thank you — we'll be in touch.
+                Thank you! We'll reach out soon.
               </h3>
               <p className="mt-3 text-ink/70 max-w-md">
-                Your message is on its way to the studio. We'll reply shortly.
+                Your message is on its way to the studio.
               </p>
+              <button
+                type="button"
+                onClick={() => setStatus("idle")}
+                className="mt-8 text-sm text-terracotta hover:text-terracotta-600 underline underline-offset-4"
+              >
+                Send another message
+              </button>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               <Field
                 label="Name"
-                name="name"
+                name="Name"
                 type="text"
                 placeholder="Your full name"
+                value={form.Name}
+                onChange={handleChange("Name")}
+                disabled={isSending}
                 required
               />
               <Field
                 label="Email"
-                name="email"
+                name="Email"
                 type="email"
                 placeholder="you@company.com"
+                value={form.Email}
+                onChange={handleChange("Email")}
+                disabled={isSending}
                 required
               />
               <div className="md:col-span-2">
                 <Field
                   label="Project Details"
-                  name="details"
+                  name="ProjectDetails"
                   as="textarea"
                   placeholder="Tell us about your goals, timeline, and anything else that matters."
+                  value={form.ProjectDetails}
+                  onChange={handleChange("ProjectDetails")}
+                  disabled={isSending}
                   required
                 />
               </div>
 
               <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-2">
-                <p className="text-sm text-ink/50">
-                  We typically reply within one business day.
+                <p className="text-sm text-ink/50" role="status" aria-live="polite">
+                  {status === "error"
+                    ? "Something went wrong — please try again."
+                    : "We typically reply within one business day."}
                 </p>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-terracotta px-8 py-3.5 text-sm md:text-base font-medium text-cream shadow-sm hover:bg-terracotta-600 hover:shadow-md hover:-translate-y-0.5 transition-all"
+                  disabled={isSending}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-terracotta px-8 py-3.5 text-sm md:text-base font-medium text-cream shadow-sm hover:bg-terracotta-600 hover:shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm disabled:hover:bg-terracotta"
                 >
-                  Send
-                  <ArrowRight className="h-4 w-4" />
+                  {isSending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      Send
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -423,13 +499,17 @@ function Contact() {
 
 /**
  * A single labeled form field. Switches between <input> and <textarea>
- * via the `as` prop while sharing styling.
+ * via the `as` prop while sharing styling. Controlled via `value` + `onChange`
+ * so the parent form can clear it after a successful submission.
  */
 interface FieldProps {
   label: string;
   name: string;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
   type?: string;
   as?: "input" | "textarea";
 }
@@ -437,13 +517,16 @@ interface FieldProps {
 function Field({
   label,
   name,
+  value,
+  onChange,
   placeholder,
   required = false,
+  disabled = false,
   type = "text",
   as = "input",
 }: FieldProps) {
   const baseClasses =
-    "mt-2 w-full rounded-2xl border border-sand-300 bg-cream px-4 py-3 text-ink placeholder:text-ink/35 outline-none transition-colors focus:border-terracotta focus:bg-cream-100 focus:ring-2 focus:ring-terracotta/20";
+    "mt-2 w-full rounded-2xl border border-sand-300 bg-cream px-4 py-3 text-ink placeholder:text-ink/35 outline-none transition-colors focus:border-terracotta focus:bg-cream-100 focus:ring-2 focus:ring-terracotta/20 disabled:opacity-60 disabled:cursor-not-allowed";
 
   return (
     <label className="block text-sm" htmlFor={name}>
@@ -455,6 +538,9 @@ function Field({
           rows={5}
           placeholder={placeholder}
           required={required}
+          disabled={disabled}
+          value={value}
+          onChange={onChange}
           className={`${baseClasses} resize-none`}
         />
       ) : (
@@ -464,6 +550,9 @@ function Field({
           type={type}
           placeholder={placeholder}
           required={required}
+          disabled={disabled}
+          value={value}
+          onChange={onChange}
           className={baseClasses}
         />
       )}
