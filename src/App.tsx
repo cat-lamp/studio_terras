@@ -57,14 +57,18 @@ function Navigation() {
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 py-5">
         <a
           href="#top"
-          className="flex items-center group transition-transform hover:scale-[1.02]"
+          className="flex items-center gap-3 group transition-transform hover:scale-[1.02]"
           aria-label="Studio Terras — home"
         >
           <img
             src="/icons.svg"
-            alt="Studio Terras"
+            alt=""
+            aria-hidden="true"
             className="h-12 md:h-14 w-auto"
           />
+          <span className="font-serif text-xl tracking-tightest-serif text-forest-700">
+            Studio Terras
+          </span>
         </a>
 
         <ul className="hidden md:flex items-center gap-10 text-sm text-ink/70">
