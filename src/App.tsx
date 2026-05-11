@@ -13,7 +13,6 @@ import {
   PenTool,
   LineChart,
   Code2,
-  Leaf,
   Loader2,
 } from "lucide-react";
 
@@ -56,13 +55,16 @@ function Navigation() {
   return (
     <header className="sticky top-0 z-40 bg-cream/80 backdrop-blur-md border-b border-sand-200/60">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 py-5">
-        <a href="#top" className="flex items-center gap-2 group">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-forest-500 text-cream transition-transform group-hover:scale-105">
-            <Leaf className="h-4 w-4" strokeWidth={1.75} />
-          </span>
-          <span className="font-serif text-xl tracking-tightest-serif text-forest-700">
-            Studio Terras
-          </span>
+        <a
+          href="#top"
+          className="flex items-center group transition-transform hover:scale-[1.02]"
+          aria-label="Studio Terras — home"
+        >
+          <img
+            src="/icons.svg"
+            alt="Studio Terras"
+            className="h-12 md:h-14 w-auto"
+          />
         </a>
 
         <ul className="hidden md:flex items-center gap-10 text-sm text-ink/70">
@@ -567,14 +569,12 @@ function Footer() {
   return (
     <footer className="border-t border-sand-200 bg-cream-100">
       <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-forest-500 text-cream">
-            <Leaf className="h-3.5 w-3.5" strokeWidth={1.75} />
-          </span>
-          <span className="font-serif text-lg text-forest-700">
-            Studio Terras
-          </span>
-        </div>
+        <img
+          src="/icons.svg"
+          alt="Studio Terras"
+          className="h-10 w-auto"
+        />
+
 
         <ul className="flex flex-wrap items-center gap-x-8 gap-y-2 text-sm text-ink/65">
           <li>
